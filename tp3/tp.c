@@ -35,7 +35,7 @@ void prepare_user_land() {
     // Add int17 handler.
     idt_reg_t idtr ;
     get_idtr(idtr) ;
-    int_desc(&idtr.desc[17], gdt_seg_sel(GDT_USER_CODE_SEG, RING_3), (offset_t) int17_handler) ;
+    int_desc(&idtr.desc[17], gdt_seg_sel(GDT_CODE_R3_SEG, RING_3), (offset_t) int17_handler) ;
     set_idtr(idtr) ;
 
     // Preparing TSS segment in GDTR.
@@ -54,10 +54,10 @@ void prepare_user_land() {
     set_tr(gdt_seg_sel(5, 0)) ;
 
     // Loading the registers.
-    set_ds(gdt_seg_sel(GDT_USER_DATA_SEG, RING_3)) ;
-    set_es(gdt_seg_sel(GDT_USER_DATA_SEG, RING_3)) ;
-    set_fs(gdt_seg_sel(GDT_USER_DATA_SEG, RING_3)) ;
-    set_gs(gdt_seg_sel(GDT_USER_DATA_SEG, RING_3)) ;
+    set_ds(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+    set_es(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+    set_fs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+    set_gs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
 
     void * userland_ptr = userland;
     __asm__ volatile ("mov %esp, %eax");
@@ -73,24 +73,24 @@ void tp() {
     gdt_init() ;
 
     // Kernel code segment.
-    gdt_seg_init(GDT_KERNEL_CODE_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_KRN|GDT_G) ;
+    gdt_seg_init(GDT_CODE_RO_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
 
     // Kernel data segment.
-    gdt_seg_init(GDT_KERNEL_DATA_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_KRN|GDT_G) ;
+    gdt_seg_init(GDT_DATA_R0_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
 
     // Userland code segment.
-    gdt_seg_init(GDT_USER_CODE_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_USR|GDT_G) ;
+    gdt_seg_init(GDT_CODE_R3_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_USR | GDT_G) ;
 
     // Userland data segment.
-    gdt_seg_init(GDT_USER_DATA_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_USR|GDT_G) ;
+    gdt_seg_init(GDT_DATA_R3_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_USR | GDT_G) ;
 
     // Set the CPU's registers value.
-    set_ss(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ; // Stack Segment (SP)
-    set_ds(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ; // Data Segment (DS)
-    set_es(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ;
-    set_fs(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ;
-    set_gs(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ;
-    set_cs(gdt_seg_sel(GDT_KERNEL_CODE_SEG, RING_0)) ;
+    set_ss(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ; // Stack Segment (SP)
+    set_ds(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ; // Data Segment (DS)
+    set_es(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
+    set_fs(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
+    set_gs(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
+    set_cs(gdt_seg_sel(GDT_CODE_RO_SEG, RING_0)) ;
 
     gdt_display() ;
     prepare_user_land() ;

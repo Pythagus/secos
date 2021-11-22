@@ -13,21 +13,21 @@ void tp() {
     gdt_init() ;
 
     // Code segment for executables.
-    gdt_seg_init(GDT_KERNEL_CODE_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_KRN|GDT_G) ;
+    gdt_seg_init(GDT_CODE_RO_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
 
     // Data segment for data.
-    gdt_seg_init(GDT_KERNEL_DATA_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_KRN|GDT_G) ;
+    gdt_seg_init(GDT_DATA_R0_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
 
     // Set the CPU's registers value.
-    set_ss(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ; // Stack Segment (SP)
-    set_ds(gdt_seg_sel(GDT_KERNEL_DATA_SEG, RING_0)) ;
-    set_cs(gdt_seg_sel(GDT_KERNEL_CODE_SEG, RING_0)) ;
+    set_ss(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ; // Stack Segment (SP)
+    set_ds(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
+    set_cs(gdt_seg_sel(GDT_CODE_RO_SEG, RING_0)) ;
 
     // Question 3 :
-    gdt_seg_init(GDT_USER_CODE_SEG, SEG_DESC_DATA_RW, 0x600000, 0x31, GDT_KRN|GDT_G) ;
+    gdt_seg_init(GDT_CODE_R3_SEG, SEG_DESC_DATA_RW, 0x600000, 0x31, GDT_KRN | GDT_G) ;
 
      // Extra segment.
-    set_es(gdt_seg_sel(GDT_USER_CODE_SEG, RING_0)) ;
+    set_es(gdt_seg_sel(GDT_CODE_R3_SEG, RING_0)) ;
 
     gdt_reg_t gdtr ;
     get_gdtr(gdtr) ;

@@ -15,11 +15,11 @@
 #define RING_3 3
 
 // GDT segments repartition.
-#define GDT_KERNEL_CODE_SEG 1
-#define GDT_KERNEL_DATA_SEG 2
-#define GDT_USER_CODE_SEG   3
-#define GDT_USER_DATA_SEG   4
-#define GDT_TSS_SEG         5
+#define GDT_CODE_RO_SEG 1
+#define GDT_DATA_R0_SEG 2
+#define GDT_CODE_R3_SEG 3
+#define GDT_DATA_R3_SEG 4
+#define GDT_TSS_SEG     5
 
 // GDT options offset
 #define GDT_G_OFFSET   0 // Size: 1
