@@ -7,6 +7,8 @@
 #include <gpr.h>
 #include <excp.h>
 
+#define ATTR_NAKED __attribute__((naked))
+
 #define IDT_NR_DESC                   256
 #define IDT_ISR_ALGN                  16
 
@@ -65,7 +67,7 @@ typedef void (*isr_t)(int_ctx_t*);
 #define int_desc(_dsc_, _cs_, _isr_)                                    \
    ({                                                                   \
       raw32_t addr = {.raw = _isr_};                                    \
-      (_dsc_)->raw      = addr.wlow;                                    \
+      (_dsc_)->offset_1 = addr.wlow;                                    \
       (_dsc_)->selector = _cs_;                                         \
       (_dsc_)->type     = SEG_DESC_SYS_INTR_GATE_32;                    \
       (_dsc_)->offset_2 = addr.whigh;                                   \

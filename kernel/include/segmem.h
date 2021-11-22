@@ -239,12 +239,12 @@ typedef struct task_state_segment
 #define get_seg_sel(_reg_)                                              \
    ({                                                                   \
       uint16_t seg;                                                     \
-      asm volatile ("movw %%"#_reg_", %%ax":"=a"(seg));                 \
+      __asm__ volatile ("movw %%"#_reg_", %%ax":"=a"(seg));                 \
       seg;                                                              \
    })
 
 #define set_seg_sel(_sel_,_reg_)                        \
-   asm volatile ("movw %%ax, %%"#_reg_ ::"a"(_sel_))
+   __asm__ volatile ("movw %%ax, %%"#_reg_ ::"a"(_sel_))
 
 #define get_ss()     get_seg_sel(ss)
 #define get_ds()     get_seg_sel(ds)
@@ -259,28 +259,28 @@ typedef struct task_state_segment
 #define set_gs(v)    set_seg_sel(v,gs)
 
 #define get_gdtr(aLocation)       \
-   asm volatile ("sgdt %0"::"m"(aLocation):"memory")
+   __asm__ volatile ("sgdt %0"::"m"(aLocation):"memory")
 #define get_ldtr(aLocation)       \
-   asm volatile ("sldt %0"::"m"(aLocation):"memory")
+   __asm__ volatile ("sldt %0"::"m"(aLocation):"memory")
 #define get_idtr(aLocation)       \
-   asm volatile ("sidt %0"::"m"(aLocation):"memory")
+   __asm__ volatile ("sidt %0"::"m"(aLocation):"memory")
 #define get_tr(aLocation)         \
-   asm volatile ("str   %0"::"m"(aLocation):"memory")
+   __asm__ volatile ("str   %0"::"m"(aLocation):"memory")
 
 #define set_gdtr(val)             \
-   asm volatile ("lgdt  %0"::"m"(val):"memory")
+   __asm__ volatile ("lgdt  %0"::"m"(val):"memory")
 #define set_ldtr(val)             \
-   asm volatile ("lldt  %0"::"m"(val):"memory")
+   __asm__ volatile ("lldt  %0"::"m"(val):"memory")
 #define set_idtr(val)             \
-   asm volatile ("lidt  %0"::"m"(val):"memory")
+   __asm__ volatile ("lidt  %0"::"m"(val):"memory")
 #define set_tr(val)               \
-   asm volatile ("ltr   %%ax"::"a"(val))
+   __asm__ volatile ("ltr   %%ax"::"a"(val))
 
 #define farjump(_fptr)            \
-   asm volatile ("ljmp  *%0"::"m"(_fptr):"memory");
+   __asm__ volatile ("ljmp  *%0"::"m"(_fptr):"memory")
 #define set_cs_eip(_cs,_eip)      \
-   asm volatile ("ljmp  %0, %1"::"i"(_cs), "i"(_eip))
+   __asm__ volatile ("ljmp  %0, %1"::"i"(_cs), "i"(_eip))
 #define set_cs(_cs)               \
-   asm volatile ("ljmp  %0, $1f ; 1:"::"i"(_cs))
+   __asm__ volatile ("ljmp  %0, $1f ; 1:"::"i"(_cs))
 
 #endif

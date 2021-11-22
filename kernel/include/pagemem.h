@@ -164,7 +164,7 @@ typedef union page_table_entry
 ** Invalidate 32 bits TLB entry
 */
 #define invalidate(addr)             \
-   asm volatile ("invlpg %0"::"m"(addr):"memory")
+   __asm__ volatile ("invlpg %0"::"m"(addr):"memory")
 
 
 #endif

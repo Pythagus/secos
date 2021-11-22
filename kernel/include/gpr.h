@@ -76,10 +76,10 @@ typedef union cpu_eflags_register
 ** Save/Restore cpu flags (32/64)
 */
 #define save_flags(flags)                               \
-   asm volatile( "pushf;pop %0":"=m"(flags)::"memory" )
+   __asm__ volatile( "pushf;pop %0":"=m"(flags)::"memory" )
 #define load_flags(flags)                                       \
-   asm volatile( "push %0;popf"::"m"(flags):"memory","cc" )
-#define clear_flags()        asm volatile( "push $0 ; popf":::"cc" );
+   __asm__ volatile( "push %0;popf"::"m"(flags):"memory","cc" )
+#define clear_flags()        __asm__ volatile( "push $0 ; popf":::"cc" );
 #define get_flags()          ({ulong_t flg; save_flags(flg); flg;})
 
 /*
@@ -132,14 +132,14 @@ typedef union general_purpose_registers_context
 #define get_pc()                                                        \
    ({                                                                   \
       offset_t x;                                                       \
-      asm volatile ("call 1f ; 1:pop %%eax":"=a"(x));                   \
+      __asm__ volatile ("call 1f ; 1:pop %%eax":"=a"(x));                   \
       x;                                                                \
    })
 
 #define get_reg(_r_)                                                    \
    ({                                                                   \
       uint32_t v;                                                       \
-      asm volatile( "mov %%"#_r_", %0":"=m"(v)::"memory" );             \
+      __asm__ volatile( "mov %%"#_r_", %0":"=m"(v)::"memory" );             \
       v;                                                                \
    })
 
@@ -147,7 +147,7 @@ typedef union general_purpose_registers_context
 #define get_esp()         get_reg(esp)
 
 #define set_reg(_r_,_v_)                                \
-   asm volatile ("mov %0, %%"#_r_::"m"(_v_):"memory")
+   __asm__ volatile ("mov %0, %%"#_r_::"m"(_v_):"memory")
 
 #define set_edi(val)      set_reg(edi,val)
 #define set_ebp(val)      set_reg(ebp,val)

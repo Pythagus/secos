@@ -8,3 +8,6 @@
 *.map
 *.patch
 !.gitignore
+
+# CLion files
+cmake-build-debug

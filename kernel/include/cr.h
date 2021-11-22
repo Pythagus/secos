@@ -150,11 +150,11 @@ typedef union control_register_4
 #define get_cr(_n_)                                                     \
    ({                                                                   \
       uint32_t x;                                                       \
-      asm volatile("mov %%cr" #_n_ ", %0":"=r"(x));                     \
+      __asm__ volatile("mov %%cr" #_n_ ", %0":"=r"(x));                     \
       x;                                                                \
    })
 
-#define set_cr(_n_,_x_) asm volatile("mov %0, %%cr" #_n_ ::"r"(_x_))
+#define set_cr(_n_,_x_) __asm__ volatile("mov %0, %%cr" #_n_ ::"r"(_x_))
 
 #define get_cr0()       get_cr(0)
 #define get_cr2()       get_cr(2)

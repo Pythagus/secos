@@ -34,7 +34,8 @@ core_obj   :=	entry.o \
 		intr.o	\
 		idt.o	\
 		excp.o	\
-		stack.o
+		stack.o \
+		secos/gdt.o
 
 objects    := $(addprefix $(CORE), $(core_obj))
 
