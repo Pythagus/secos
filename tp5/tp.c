@@ -71,8 +71,8 @@ void prepare_user_land() {
 
     // Preparing Task State Segment (TSS).
     tss.s0.esp = get_ebp() ;
-    tss.s0.ss  = gdt_seg_sel(2, 0) ;
-    set_tr(gdt_seg_sel(5, 0)) ;
+    tss.s0.ss  = gdt_seg_sel(GDT_DATA_R0_SEG, RING_0) ;
+    set_tr(gdt_seg_sel(GDT_TSS_SEG, RING_0)) ;
 
     // Loading the registers.
     set_ds(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
@@ -81,11 +81,11 @@ void prepare_user_land() {
     set_gs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
 
     void * userland_ptr = userland;
-    __asm__ volatile ("mov %esp, %eax");
-    __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(4, 3))) ; // DS (SS)
+    __asm__ volatile ("MOV %esp, %eax");
+    __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
     __asm__ volatile ("PUSHl %eax") ; // ESP
     __asm__ volatile ("PUSHF") ; // E flags.
-    __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(3, 3))) ; // CS
+    __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_CODE_R3_SEG, RING_3))) ; // CS
     __asm__ volatile ("PUSHl %%ebx"::"b"(userland_ptr)) ; // EIP
     __asm__ volatile ("IRET") ;
 }
