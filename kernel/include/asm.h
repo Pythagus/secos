@@ -4,9 +4,9 @@
 
 #include <gpr.h>
 
-#define force_interrupts_on()     asm volatile( "sti ; nop" )
-#define force_interrupts_off()    asm volatile( "cli" )
-#define halt()                    asm volatile( "cli ; hlt" )
+#define force_interrupts_on()     __asm__ volatile( "sti ; nop" )
+#define force_interrupts_off()    __asm__ volatile( "cli" )
+#define halt()                    __asm__ volatile( "cli ; hlt" )
 
 #define interrupts_enabled()         (get_flags() & EFLAGS_IF)
 #define disable_interrupts(flags)    ({save_flags(flags);force_interrupts_on();})

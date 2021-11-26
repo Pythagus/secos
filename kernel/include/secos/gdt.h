@@ -30,6 +30,9 @@
 #define GDT_KRN (RING_0 << GDT_DPL_OFFSET)
 #define GDT_USR (RING_3 << GDT_DPL_OFFSET)
 
+// Set the registers.
+
+
 /**
  * Initialize the GDT.
  *
@@ -49,6 +52,13 @@ void gdt_init() ;
  * @return the updated segment
  */
 seg_desc_t * gdt_seg_init(uint32_t index, uint32_t type, uint32_t base, uint32_t limit, uint32_t options) ;
+
+/**
+ * Prepare the TSS segment descriptor.
+ *
+ * @return void
+ */
+void gdt_prepare_tss() ;
 
 /**
  * Get the segment at the given

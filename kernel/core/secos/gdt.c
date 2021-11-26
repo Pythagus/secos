@@ -15,6 +15,11 @@
 seg_desc_t gdt_entries[GDT_NBR_ENTRY] ;
 
 /**
+ * Task State Segment variable.
+ */
+tss_t tss ;
+
+/**
  * Initialize the GDT.
  *
  * @return void
@@ -74,6 +79,27 @@ seg_desc_t * gdt_seg_init(uint32_t index, uint32_t type, uint32_t base, uint32_t
 }
 
 /**
+ * Prepare the TSS segment descriptor.
+ *
+ * @return void
+ */
+void gdt_prepare_tss() {
+    raw32_t tss_addr = { .raw = (offset_t) &tss } ;
+    seg_desc_t * tss_desc = gdt_seg_init(GDT_TSS_SEG, SEG_DESC_SYS_TSS_AVL_32, 0, 0xFFFFF, 0) ;
+    tss_desc->raw    = sizeof(tss_t) ;
+    tss_desc->base_1 = tss_addr.wlow ;
+    tss_desc->base_2 = tss_addr._whigh.blow ;
+    tss_desc->base_3 = tss_addr._whigh.bhigh ;
+    tss_desc->type   = SEG_DESC_SYS_TSS_AVL_32 ;
+    tss_desc->p      = 1 ;
+
+    // Preparing Task State Segment (TSS).
+    //tss.s0.esp = get_ebp() ;
+    //tss.s0.ss  = gdt_seg_sel(GDT_DATA_R0_SEG, RING_0) ;
+    set_tr(gdt_seg_sel(GDT_TSS_SEG, RING_0)) ;
+}
+
+/**
  * Get the segment at the given
  * index.
  *
@@ -83,18 +109,6 @@ seg_desc_t * gdt_seg_init(uint32_t index, uint32_t type, uint32_t base, uint32_t
 seg_desc_t * gdt_seg_get(uint32_t index) {
     return gdt_entries + index ;
 }
-
-/**
- * Set up the segment options.
- *
- * @param index
- * @param opts
- */
-/*static inline void gdt_seg_opt(uint32_t index, uint32_t opts) {
-    //seg_desc_t * segment = &gdt_entries[index] ;
-
-    // TODO : TO DO !
-}*/
 
 /**
  * Display the segment using debug().

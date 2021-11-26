@@ -35,7 +35,10 @@ core_obj   :=	entry.o \
 		idt.o	\
 		excp.o	\
 		stack.o \
-		secos/gdt.o
+		secos/gdt.o \
+		secos/idt.o \
+		secos/task.o \
+		secos/syscall.o
 
 objects    := $(addprefix $(CORE), $(core_obj))
 

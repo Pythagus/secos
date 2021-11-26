@@ -56,4 +56,9 @@ add_executable(secos
         utils/config.mk
         utils/grub.floppy
         utils/linker.lds
-        utils/rules.mk kernel/core/secos/gdt.c kernel/include/secos/gdt.h)
+        utils/rules.mk kernel/core/secos/gdt.c
+        kernel/include/secos/gdt.h
+        kernel/core/secos/idt.c
+        kernel/include/secos/idt.h
+        kernel/core/secos/syscall.c
+        kernel/include/secos/syscall.h kernel/core/secos/task.c kernel/include/secos/task.h)
