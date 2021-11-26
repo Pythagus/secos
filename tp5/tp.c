@@ -33,7 +33,7 @@ void prepare_user_land() {
     set_fs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
     set_gs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
 
-    void * userland_ptr = userland;
+    void * userland_ptr = userland ;
     __asm__ volatile ("MOV %esp, %eax");
     __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
     __asm__ volatile ("PUSHl %eax") ; // ESP

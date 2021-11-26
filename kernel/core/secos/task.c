@@ -14,6 +14,7 @@
 #include <string.h>
 #include <secos/idt.h>
 #include <secos/gdt.h>
+#include <secos/task.h>
 
 #define TASK_ARRAY_SIZE 16
 
@@ -94,35 +95,6 @@ void task_add(void * main) {
 }
 
 /**
- * Switch to the next task in the
- * tasks array.
- *
- * @return void
- */
-void task_switch_next() {
-    // Check whether a task is running.
-    if(current_task == NULL) {
-        current_task  = first_task ;
-    } else {
-        current_task = current_task->next ;
-    }
-
-    if(current_task->present) {
-        // TODO : set the task stack.
-        if(current_task->executed) {
-            // TODO : pop the registers.
-            // __asm__ volatile ("POPF") ; // Restore ALU flags.
-        }
-
-        // TODO : continue the execution
-
-
-        // TODO : push all registers of the current task.
-        //__asm__ volatile ("PUSHF") ; // PUSH EFLAGS (ALU flags).
-    }
-}
-
-/**
  * Function executed each time the
  * hardware timer IRQ0 generates
  * an interruption.
@@ -130,13 +102,37 @@ void task_switch_next() {
  * @return void
  */
 static void irq0_timer_callback() {
-    printf("Je switch !\n") ;
-    //task_switch_next() ;
+    printf("Je switch : %x\n", current_task->eip) ;
+    current_task->executed = 1 ;
+
+    // TODO : PUSH registers in stack.
+
+    current_task = current_task->next ;
+    if(current_task->executed) {
+        // TODO : POP registers from stack.
+    } else {
+        printf("Don't POP for %x\n", current_task->eip) ;
+    }
 
     // Send an ACK to the timer.
     outb(PIC1, PIC_EOI) ;
     force_interrupts_on() ;
-    __asm__ volatile ("sti") ;
+}
+
+/**
+ * Start the task scheduler working
+ * with the tasks array.
+ *
+ * @return void
+ */
+void task_start_scheduling() {
+    if(first_task == NULL) {
+        panic("[ERROR] No scheduled task to run") ;
+        return ;
+    }
+
+    current_task = first_task ;
+    idt_set_handler(IDT_IRQ0_INDEX, &irq0_timer_callback,  RING_0) ;
 }
 
 /**
@@ -148,6 +144,4 @@ void task_initialize() {
     for(int i = 0 ; i < TASK_ARRAY_SIZE ; i++) {
         memset(tasks + i, 0, sizeof(t_task)) ;
     }
-
-    idt_set_handler(IDT_IRQ0_INDEX, &irq0_timer_callback,  RING_0) ;
 }

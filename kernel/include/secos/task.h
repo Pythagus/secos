@@ -24,11 +24,11 @@ void task_initialize() ;
 void task_add(void * main) ;
 
 /**
- * Switch to the next task in the
- * tasks array.
+ * Start the task scheduler working
+ * with the tasks array.
  *
  * @return void
  */
-void task_switch_next() ;
+void task_start_scheduling() ;
 
 #endif

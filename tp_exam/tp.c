@@ -29,13 +29,15 @@ void tp() {
 
     // Initializing the IDT.
     idt_set_handler(IDT_SYSCALL_INDEX, syscall_isr, RING_3) ;
-    force_interrupts_on() ;
 
     // Initialize tasking management.
     task_initialize() ;
     task_add(&userland_1) ;
     task_add(&userland_2) ;
-    task_switch_next() ;
+    task_start_scheduling() ;
+
+    // Enable interruptions.
+    force_interrupts_on() ;
 
     while(1) ;
 }
