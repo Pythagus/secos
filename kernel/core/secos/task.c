@@ -12,8 +12,6 @@
 #include <types.h>
 #include <debug.h>
 #include <string.h>
-#include <secos/idt.h>
-#include <secos/gdt.h>
 #include <secos/task.h>
 
 #define TASK_ARRAY_SIZE 16
@@ -28,6 +26,9 @@ struct t_task {
 
     // Stack variables.
     uint32_t esp, ebp, eip ;
+
+    // Pagination credentials.
+    uint32_t pgd_base ;
 
     // Next task to be run.
     t_task * next ;
@@ -46,12 +47,6 @@ t_task tasks[TASK_ARRAY_SIZE] ;
 t_task * current_task = NULL ;
 
 /*
- * Determine the first task of
- * the array to make a rotation.
- */
-t_task * first_task = NULL ;
-
-/*
  * Determine the end of the task
  * scheduler to be able to add
  * a new task.
@@ -66,13 +61,12 @@ t_task * last_task = NULL ;
 void task_add(void * main) {
     t_task * addr = NULL ;
 
-    if(first_task == NULL) {
+    // If there is no tasks.
+    if(last_task == NULL) {
         addr       = tasks ;
-        first_task = addr ;
+        addr->next = addr ;
         last_task  = addr ;
-    }
-
-    if(addr == NULL) {
+    } else {
         for(int i = 0 ; i < TASK_ARRAY_SIZE ; i++) {
             if(! tasks[i].present) {
                 addr = tasks + i ;
@@ -87,11 +81,20 @@ void task_add(void * main) {
 
     addr->present  = 1 ;
     addr->executed = 0 ;
-    addr->next = first_task ;
     addr->eip  = (uint32_t) main ;
+
     // TODO : init esp and ebp, and a page.
 
+    // Set the task at the end of the list.
+    t_task * tmp    = last_task->next ;
     last_task->next = addr ;
+    last_task  = addr ;
+    addr->next = tmp ;
+
+    // If no task was added yet.
+    if(current_task == NULL) {
+        current_task = addr ;
+    }
 }
 
 /**
@@ -101,7 +104,7 @@ void task_add(void * main) {
  *
  * @return void
  */
-static void irq0_timer_callback() {
+void irq0_timer_callback() {
     printf("Je switch : %x\n", current_task->eip) ;
     current_task->executed = 1 ;
 
@@ -117,22 +120,6 @@ static void irq0_timer_callback() {
     // Send an ACK to the timer.
     outb(PIC1, PIC_EOI) ;
     force_interrupts_on() ;
-}
-
-/**
- * Start the task scheduler working
- * with the tasks array.
- *
- * @return void
- */
-void task_start_scheduling() {
-    if(first_task == NULL) {
-        panic("[ERROR] No scheduled task to run") ;
-        return ;
-    }
-
-    current_task = first_task ;
-    idt_set_handler(IDT_IRQ0_INDEX, &irq0_timer_callback,  RING_0) ;
 }
 
 /**

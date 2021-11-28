@@ -3,15 +3,9 @@
 #include <info.h>
 #include <cr.h>
 #include <pagemem.h>
+#include <secos/page.h>
 
-// 0x1000 because : 1024 entries * sizeof(pde32_t) = 0x1000
-#define PGD_ENTRY_SIZE 0x1000
-
-// Root address of the PGD.
-#define PGD_ADDR 0x600000
-
-#define pgd_entry_addr(i) (PGD_ADDR + i * PGD_ENTRY_SIZE)
-#define pgd_entry(i) ((pte32_t *) pgd_entry_addr(i))
+#define PGD_KRN 0x600000
 
 // @see https://wiki.osdev.org/Paging
 extern info_t * info ;
@@ -22,8 +16,7 @@ void question_1() {
 
 // Set the CR3 value.
 void question_2() {
-    pde32_t * pgd = (pde32_t *) PGD_ADDR ;
-    set_cr3(pgd) ;
+    set_cr3(pg_pgd(PGD_KRN)) ;
     printf("CR3 = %x\n", get_cr3()) ;
 }
 
@@ -35,35 +28,42 @@ void question_3() {
 }
 
 void question_4() {
-    pde32_t * pgd = (pde32_t *) PGD_ADDR ;
+    int table_addr = pg_pte(PGD_KRN, 0) ;
+    pde32_t * pgd  = (pde32_t *) pg_pgd(PGD_KRN) ;
+    pte32_t * pte  = (pte32_t *) table_addr ;
 
     // Prepare the first page.
-    for(uint32_t i = 0 ; i < PG_4K_SIZE ; i++) {
-        pg_set_entry(pgd_entry(1) + i, PG_KRN|PG_RW, i) ;
+    for(uint32_t i = 0 ; i < 1024 ; i++) {
+        pg_set_entry(pte + i, PG_KRN|PG_RW, i) ;
     }
 
     // Set the first entry in the PGD for the PDT.
-    pg_set_entry(pgd, PG_KRN|PG_RW, pgd_entry_addr(1) >> PG_4K_SHIFT) ;
+    pg_set_entry(pgd, PG_KRN|PG_RW, table_addr >> PG_4K_SHIFT) ;
 }
 
 void question_5() {
-    pte32_t * ptb = pgd_entry(10) ;
-    printf("ptb->p = %d\n", ptb->p) ;
+    printf("===> QUESTION 5\n") ;
+
+    int table_addr = pg_pte(PGD_KRN, 0) ;
+    pte32_t * pte  = (pte32_t *) table_addr ;
+
+    printf("ptb->addr = %d\n", pte[6].addr) ;
     // Génère une Page Fault... :(
 }
 
 void question_6() {
-    pde32_t * pgd = (pde32_t *) pgd_entry_addr(0) ;
+    int table_addr = pg_pte(PGD_KRN, 1) ;
+    pde32_t * pgd  = (pde32_t *) pg_pgd(PGD_KRN) ;
+    pte32_t * pte  = (pte32_t *) table_addr ;
 
-    // Prepare the second page.
-    pte32_t * ptb2 = pgd_entry(2) ;
-    for(uint32_t i = 0 ; i < PG_4K_SIZE ; i++) {
-        pg_set_entry(ptb2 + i, PG_KRN|PG_RW, i + 1024) ;
+    for(uint32_t i = 0 ; i < 1024 ; i++) {
+        pg_set_entry(pte + i, PG_KRN|PG_RW, i + 1024) ;
     }
 
-    pg_set_entry(pgd + 1, PG_KRN|PG_RW, pgd_entry_addr(2) >> PG_4K_SHIFT) ;
+    pg_set_entry(pgd + 1, PG_KRN|PG_RW, table_addr >> PG_4K_SHIFT) ;
 }
 
+/*
 void question_7() {
     pde32_t * pgd  = (pde32_t *) pgd_entry_addr(0) ;
     pte32_t * ptb3 = (pte32_t *) pgd_entry_addr(3) ;
@@ -104,7 +104,7 @@ void question_9() {
 
     *virtual = 'A' ;
     printf("%x pointe sur %x\n", (void *) virtual, *virtual) ;
-}
+}*/
 
 void tp() {
     question_1() ;
@@ -113,7 +113,7 @@ void tp() {
     question_6() ;
     question_3() ;
     question_5() ;
-    question_7() ;
-    question_8() ;
-    question_9() ;
+    //question_7() ;
+    //question_8() ;
+    //question_9() ;
 }

@@ -24,11 +24,12 @@ void task_initialize() ;
 void task_add(void * main) ;
 
 /**
- * Start the task scheduler working
- * with the tasks array.
+ * Function executed each time the
+ * hardware timer IRQ0 generates
+ * an interruption.
  *
  * @return void
  */
-void task_start_scheduling() ;
+void irq0_timer_callback() ;
 
 #endif

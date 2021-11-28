@@ -61,4 +61,4 @@ add_executable(secos
         kernel/core/secos/idt.c
         kernel/include/secos/idt.h
         kernel/core/secos/syscall.c
-        kernel/include/secos/syscall.h kernel/core/secos/task.c kernel/include/secos/task.h)
+        kernel/include/secos/syscall.h kernel/core/secos/task.c kernel/include/secos/task.h kernel/core/secos/page.c kernel/include/secos/page.h kernel/core/secos/os.c kernel/include/secos/os.h)
