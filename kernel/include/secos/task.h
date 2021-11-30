@@ -21,7 +21,7 @@ void task_initialize() ;
  *
  * @param main
  */
-void task_add(void * main) ;
+uint8_t task_add(void * main) ;
 
 /**
  * Function executed each time the

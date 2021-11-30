@@ -5,7 +5,6 @@
 #include <pagemem.h>
 #include <secos/page.h>
 
-#define PGD_KRN 0x600000
 
 // @see https://wiki.osdev.org/Paging
 extern info_t * info ;
@@ -16,7 +15,7 @@ void question_1() {
 
 // Set the CR3 value.
 void question_2() {
-    set_cr3(pg_pgd(PGD_KRN)) ;
+    set_cr3(pg_pgd(PAGINATION_KERNEL_BASE)) ;
     printf("CR3 = %x\n", get_cr3()) ;
 }
 
@@ -28,12 +27,12 @@ void question_3() {
 }
 
 void question_4() {
-    int table_addr = pg_pte(PGD_KRN, 0) ;
-    pde32_t * pgd  = (pde32_t *) pg_pgd(PGD_KRN) ;
+    int table_addr = pg_pte(PAGINATION_KERNEL_BASE, 0) ;
+    pde32_t * pgd  = (pde32_t *) pg_pgd(PAGINATION_KERNEL_BASE) ;
     pte32_t * pte  = (pte32_t *) table_addr ;
 
     // Prepare the first page.
-    for(uint32_t i = 0 ; i < 1024 ; i++) {
+    for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
         pg_set_entry(pte + i, PG_KRN|PG_RW, i) ;
     }
 
@@ -44,7 +43,7 @@ void question_4() {
 void question_5() {
     printf("===> QUESTION 5\n") ;
 
-    int table_addr = pg_pte(PGD_KRN, 0) ;
+    int table_addr = pg_pte(PAGINATION_KERNEL_BASE, 0) ;
     pte32_t * pte  = (pte32_t *) table_addr ;
 
     printf("ptb->addr = %d\n", pte[6].addr) ;
@@ -52,11 +51,11 @@ void question_5() {
 }
 
 void question_6() {
-    int table_addr = pg_pte(PGD_KRN, 1) ;
-    pde32_t * pgd  = (pde32_t *) pg_pgd(PGD_KRN) ;
+    int table_addr = pg_pte(PAGINATION_KERNEL_BASE, 1) ;
+    pde32_t * pgd  = (pde32_t *) pg_pgd(PAGINATION_KERNEL_BASE) ;
     pte32_t * pte  = (pte32_t *) table_addr ;
 
-    for(uint32_t i = 0 ; i < 1024 ; i++) {
+    for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
         pg_set_entry(pte + i, PG_KRN|PG_RW, i + 1024) ;
     }
 

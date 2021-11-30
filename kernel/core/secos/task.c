@@ -13,6 +13,7 @@
 #include <debug.h>
 #include <string.h>
 #include <secos/task.h>
+#include <secos/page.h>
 
 #define TASK_ARRAY_SIZE 16
 
@@ -29,6 +30,9 @@ struct t_task {
 
     // Pagination credentials.
     uint32_t pgd_base ;
+
+    // Process id.
+    uint8_t pid ;
 
     // Next task to be run.
     t_task * next ;
@@ -58,7 +62,7 @@ t_task * last_task = NULL ;
  *
  * @param main
  */
-void task_add(void * main) {
+uint8_t task_add(void * main) {
     t_task * addr = NULL ;
 
     // If there is no tasks.
@@ -75,13 +79,14 @@ void task_add(void * main) {
         }
 
         if(addr == NULL) {
-            panic("[ERROR] Cannot add another task.\n") ; return ;
+            panic("[ERROR] Cannot add another task.\n") ; return -1 ;
         }
     }
 
     addr->present  = 1 ;
     addr->executed = 0 ;
-    addr->eip  = (uint32_t) main ;
+    addr->eip = (uint32_t) main ;
+    addr->pgd_base = pg_base(addr->pid) ;
 
     // TODO : init esp and ebp, and a page.
 
@@ -95,6 +100,8 @@ void task_add(void * main) {
     if(current_task == NULL) {
         current_task = addr ;
     }
+
+    return addr->pid ;
 }
 
 /**
@@ -128,7 +135,13 @@ void irq0_timer_callback() {
  * @return void
  */
 void task_initialize() {
+    t_task * task ;
+
     for(int i = 0 ; i < TASK_ARRAY_SIZE ; i++) {
-        memset(tasks + i, 0, sizeof(t_task)) ;
+        task = tasks + i ;
+
+        memset(task, 0, sizeof(t_task)) ;
+        task->pid = i + 1 ;
+        task->pgd_base = pg_base(task->pid) ;
     }
 }
