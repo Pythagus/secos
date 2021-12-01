@@ -11,42 +11,53 @@
 #include <secos/page.h>
 
 /**
- * Initialize the kernl pages.
+ * Initialize the kernel pages.
  *
  * @return void
  */
 void page_kernel_init() {
-    uint32_t table_addr = pg_pte(PAGINATION_KERNEL_BASE, 0) ;
+    pte32_t * ptb ;
     pde32_t * pgd = (pde32_t *) pg_pgd(PAGINATION_KERNEL_BASE) ;
-    pte32_t * ptb = (pte32_t *) table_addr ;
 
     // Clean the memory area.
-    memset(pgd, 0, PAGINATION_NBR_PGD * PGD_SIZE) ;
+    memset(pgd, 0, PAGINATION_AREA_SIZE) ;
 
-    // Prepare the Kernel pages.
-    pg_set_entry(pgd, PG_KRN|PG_RW, table_addr >> PG_4K_SHIFT) ;
-    for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
-        pg_set_entry(ptb + i, PG_KRN|PG_RW, i) ;
+    // Prepare all PGD entries.
+    for(uint32_t i = 0 ; i < PAGINATION_NBR_PGD ; i++) {
+        ptb = (pte32_t *) pg_pte(PAGINATION_KERNEL_BASE, i) ;
+        pg_set_entry(pgd + i, PG_KRN|PG_RW, page_nr(ptb)) ;
+
+        for(uint32_t j = 0 ; j < PAGINATION_NBR_PTE ; j++) {
+            pg_set_entry(ptb + j, PG_KRN|PG_RW, j) ;
+        }
     }
 
     // Start pagination.
-    //set_cr3(pg_pgd(PAGINATION_KERNEL_BASE)) ;
-    //set_cr0(get_cr0() | CR0_PG) ;
+    set_cr3(pg_pgd(PAGINATION_KERNEL_BASE)) ;
+    set_cr0(get_cr0() | CR0_PG) ;
 }
 
+/**
+ * Prepare the user pages.
+ *
+ * @param index
+ * @return the base
+ */
 uint32_t page_user_init(uint8_t index) {
-    uint32_t base  = pg_base(index) ;
-    /*uint32_t table_addr = pg_pte(base, 0) ;
+    // User PGD base.
+    uint32_t base = pg_base(index) ;
+
+    pte32_t * ptb = (pte32_t *) pg_pte(base, 0) ;
     pde32_t * pgd = (pde32_t *) pg_pgd(base) ;
-    pte32_t * pte = (pte32_t *) table_addr ;
 
+    // Clean the memory area.
+    //memset(pgd, 0, PAGINATION_AREA_SIZE) ;
 
-    // TODO : memset(0) ?
-
-    pg_set_entry(pgd, PG_KRN|PG_RW, table_addr >> PG_4K_SHIFT) ;
-    for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
-        // TODO : check
-        //pg_set_entry(pte + i, PG_KRN|PG_RW, PAGINATION_KERNEL_BASE + i * 0x1000) ;
+    // Prepare PGD entries.
+    pg_set_entry(pgd, PG_KRN|PG_RW, page_nr(ptb)) ;
+    page_translate(base, PAGINATION_USER_VIRTUAL_BASE, PAGINATION_USER_VIRTUAL_BASE, PG_USR|PG_RW) ;
+    /*for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
+        pg_set_entry(ptb + i, PG_KRN|PG_RW, page_nr(PAGINATION_USER_VIRTUAL_BASE) + i) ;
     }*/
 
     return base ;
@@ -63,8 +74,8 @@ uint32_t page_user_init(uint8_t index) {
  */
 void page_translate(uint32_t base, uint32_t physical, uint32_t virtual, int attributes) {
     // Important indexes to add page translation.
-    int pd_index = pd32_idx(virtual) ;
-    int pt_index = pt32_idx(virtual) ;
+    uint32_t pd_index = pd32_idx(virtual) ;
+    uint32_t pt_index = pt32_idx(virtual) ;
 
     pte32_t * ptb = (pte32_t *) pg_pte(base, pd_index) ;
     pg_set_entry(ptb + pt_index, attributes, page_nr(physical)) ;

@@ -43,8 +43,7 @@
 // Where the Kernel pagination table starts.
 #define PAGINATION_KERNEL_BASE 0x4000000
 
-// Where the users' pagination tables start.
-#define PAGINATION_USER_BASE 0x4000000
+#define PAGINATION_USER_VIRTUAL_BASE 0x700000
 
 /**
  * Initialize the kernel pages.
@@ -53,6 +52,12 @@
  */
 void page_kernel_init() ;
 
+/**
+ * Prepare the user pages.
+ *
+ * @param index
+ * @return the base
+ */
 uint32_t page_user_init(uint8_t index) ;
 
 /**

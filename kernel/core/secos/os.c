@@ -47,19 +47,6 @@ void secos_initialize() {
 }
 
 /**
- * Start the OS. This function should not
- * be called, but pagination failed to be
- * as "real" as possible. So we need to
- * call this function at tp.c.
- *
- * @return void
- */
-void secos_start() {
-    set_cr3(pg_pgd(PAGINATION_KERNEL_BASE)) ;
-    set_cr0(get_cr0() | CR0_PG) ;
-}
-
-/**
  * Add a task to the OS.
  *
  * @param main

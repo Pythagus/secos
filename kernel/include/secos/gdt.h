@@ -30,9 +30,6 @@
 #define GDT_KRN (RING_0 << GDT_DPL_OFFSET)
 #define GDT_USR (RING_3 << GDT_DPL_OFFSET)
 
-// Set the registers.
-
-
 /**
  * Initialize the GDT.
  *
