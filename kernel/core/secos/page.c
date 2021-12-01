@@ -47,15 +47,15 @@ uint32_t page_user_init(uint8_t index) {
     // User PGD base.
     uint32_t base = pg_base(index) ;
 
-    pte32_t * ptb = (pte32_t *) pg_pte(base, 0) ;
-    pde32_t * pgd = (pde32_t *) pg_pgd(base) ;
+    //pde32_t * pgd = (pde32_t *) pg_pgd(base) ;
+    //uint32_t pd_index = pd32_idx(PAGINATION_USER_VIRTUAL_BASE) ;
 
     // Clean the memory area.
     //memset(pgd, 0, PAGINATION_AREA_SIZE) ;
 
     // Prepare PGD entries.
-    pg_set_entry(pgd, PG_KRN|PG_RW, page_nr(ptb)) ;
-    page_translate(base, PAGINATION_USER_VIRTUAL_BASE, PAGINATION_USER_VIRTUAL_BASE, PG_USR|PG_RW) ;
+    //pg_set_entry(pgd + pd_index, PG_KRN|PG_RW, page_nr(PAGINATION_USER_VIRTUAL_BASE)) ;
+    //page_translate(base, pg_user_base(index), PAGINATION_USER_VIRTUAL_BASE, PG_USR|PG_RW) ;
     /*for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
         pg_set_entry(ptb + i, PG_KRN|PG_RW, page_nr(PAGINATION_USER_VIRTUAL_BASE) + i) ;
     }*/

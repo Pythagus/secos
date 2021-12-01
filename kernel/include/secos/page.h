@@ -43,7 +43,14 @@
 // Where the Kernel pagination table starts.
 #define PAGINATION_KERNEL_BASE 0x4000000
 
+// Base of the virtual memory area for user processes.
 #define PAGINATION_USER_VIRTUAL_BASE 0x700000
+
+// Max size of the user processes' virtual memory area.
+#define PAGINATION_USER_VIRTUAL_SIZE 0x10000
+
+// Address of the base user process memory area.
+#define pg_user_base(__i__) (PAGINATION_USER_VIRTUAL_BASE + __i__ * PAGINATION_USER_VIRTUAL_SIZE)
 
 /**
  * Initialize the kernel pages.

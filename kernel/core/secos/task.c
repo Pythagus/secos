@@ -86,9 +86,8 @@ uint8_t task_add(void * main) {
     addr->present  = 1 ;
     addr->executed = 0 ;
     addr->eip = (uint32_t) main ;
-    addr->pgd_base = pg_base(addr->pid) ;
 
-    // TODO : init esp and ebp, and a page.
+    // TODO : init esp and ebp.
 
     // Set the task at the end of the list.
     t_task * tmp    = last_task->next ;
@@ -109,19 +108,47 @@ uint8_t task_add(void * main) {
  * hardware timer IRQ0 generates
  * an interruption.
  *
- * @return void
+ * @param ctx
  */
-void irq0_timer_callback() {
-    printf("Je switch : %x\n", current_task->eip) ;
-    current_task->executed = 1 ;
+void irq0_timer_callback(int_ctx_t * ctx) {
+    if(current_task != NULL) {
+        printf("Je switch : %x, %x\n", current_task->eip, ctx->eip) ;
+        current_task->executed = 1 ;
+        current_task->ebp = *((uint32_t *) (&ctx->gpr.ebp)) ;
+        current_task->esp = *((uint32_t *) (&ctx->gpr.esp)) ;
 
-    // TODO : PUSH registers in stack.
+        //current_task->eip = *((uint32_t *) (&ctx->eip)) ;
 
-    current_task = current_task->next ;
-    if(current_task->executed) {
-        // TODO : POP registers from stack.
-    } else {
-        printf("Don't POP for %x\n", current_task->eip) ;
+            /*
+        *__asm__ volatile ("PUSHF") ; // Push ALU flags.
+        __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.eax)) ;
+        __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.ebx)) ;
+        __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.ecx)) ;
+        __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.edx)) ;
+        __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.esi)) ;
+        __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.edi)) ;*/
+
+        /*
+
+         void * userland_ptr = userland;
+        __asm__ volatile ("MOV %esp, %eax");
+        __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
+        __asm__ volatile ("PUSHl %eax") ; // ESP
+        __asm__ volatile ("PUSHF") ; // E flags.
+        __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_CODE_R3_SEG, RING_3))) ; // CS
+        __asm__ volatile ("PUSHl %%ebx"::"b"(userland_ptr)) ; // EIP
+        __asm__ volatile ("IRET") ;
+
+         */
+
+        // TODO : PUSH registers in stack.
+
+        current_task = current_task->next ;
+        if(current_task->executed) {
+            // TODO : POP registers from stack.
+        } else {
+            printf("Don't POP for %x\n", current_task->eip) ;
+        }
     }
 
     // Send an ACK to the timer.
@@ -142,6 +169,9 @@ void task_initialize() {
 
         memset(task, 0, sizeof(t_task)) ;
         task->pid = i + 1 ;
+        task->present  = 0 ;
         task->pgd_base = pg_base(task->pid) ;
+        task->ebp = pg_user_base(task->pid) + PG_4K_SIZE - 1 ;
+        task->esp = task->ebp ;
     }
 }

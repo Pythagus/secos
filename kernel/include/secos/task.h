@@ -9,6 +9,8 @@
 #ifndef SECOS_TASK_H
 #define SECOS_TASK_H
 
+#include <intr.h>
+
 /**
  * Initialize the tasks management.
  *
@@ -30,6 +32,6 @@ uint8_t task_add(void * main) ;
  *
  * @return void
  */
-void irq0_timer_callback() ;
+void irq0_timer_callback(int_ctx_t * ctx) ;
 
 #endif
