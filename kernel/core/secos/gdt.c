@@ -94,8 +94,8 @@ void gdt_prepare_tss() {
     tss_desc->p      = 1 ;
 
     // Preparing Task State Segment (TSS).
-    //tss.s0.esp = get_ebp() ;
-    //tss.s0.ss  = gdt_seg_sel(GDT_DATA_R0_SEG, RING_0) ;
+    tss.s0.esp = get_ebp() ;
+    tss.s0.ss  = gdt_seg_sel(GDT_DATA_R0_SEG, RING_0) ;
     set_tr(gdt_seg_sel(GDT_TSS_SEG, RING_0)) ;
 }
 

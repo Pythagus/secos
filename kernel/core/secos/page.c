@@ -17,50 +17,45 @@
  */
 void page_kernel_init() {
     pte32_t * ptb ;
-    pde32_t * pgd = (pde32_t *) pg_pgd(PAGINATION_KERNEL_BASE) ;
+    pde32_t * pgd = (pde32_t *) pg_pgd(PAGINATION_BASE_KRN) ;
 
     // Clean the memory area.
-    memset(pgd, 0, PAGINATION_AREA_SIZE) ;
+    memset(pgd, 0, PAGINATION_AREA_SIZE_KRN) ;
 
     // Prepare all PGD entries.
-    for(uint32_t i = 0 ; i < PAGINATION_NBR_PGD ; i++) {
-        ptb = (pte32_t *) pg_pte(PAGINATION_KERNEL_BASE, i) ;
+    for(uint32_t i = 0 ; i < PAGINATION_NBR_PGD_KRN ; i++) {
+        ptb = (pte32_t *) pg_pte_krn(i) ;
         pg_set_entry(pgd + i, PG_KRN|PG_RW, page_nr(ptb)) ;
 
-        for(uint32_t j = 0 ; j < PAGINATION_NBR_PTE ; j++) {
+        for(uint32_t j = 0 ; j < PAGINATION_NBR_PTE_KRN ; j++) {
             pg_set_entry(ptb + j, PG_KRN|PG_RW, j) ;
         }
     }
-
-    // Start pagination.
-    set_cr3(pg_pgd(PAGINATION_KERNEL_BASE)) ;
-    set_cr0(get_cr0() | CR0_PG) ;
 }
 
 /**
  * Prepare the user pages.
  *
- * @param index
- * @return the base
+ * @param base
  */
-uint32_t page_user_init(uint8_t index) {
-    // User PGD base.
-    uint32_t base = pg_base(index) ;
+void page_user_init(uint32_t base) {
+    pte32_t * ptb = (pte32_t *) pg_pte_usr(base, 0) ;
+    pde32_t * pgd = (pde32_t *) pg_pgd(base) ;
 
-    //pde32_t * pgd = (pde32_t *) pg_pgd(base) ;
-    //uint32_t pd_index = pd32_idx(PAGINATION_USER_VIRTUAL_BASE) ;
+    printf("BASE  = %x (%x)\n", base, PAGINATION_AREA_SIZE_USR) ;
+    printf("- pgd = %x\n", pgd) ;
+    printf("- ptb = %x\n", ptb) ;
 
     // Clean the memory area.
-    //memset(pgd, 0, PAGINATION_AREA_SIZE) ;
+    memset(pgd, 0, PAGINATION_AREA_SIZE_USR) ;
 
-    // Prepare PGD entries.
-    //pg_set_entry(pgd + pd_index, PG_KRN|PG_RW, page_nr(PAGINATION_USER_VIRTUAL_BASE)) ;
-    //page_translate(base, pg_user_base(index), PAGINATION_USER_VIRTUAL_BASE, PG_USR|PG_RW) ;
-    /*for(uint32_t i = 0 ; i < PAGINATION_NBR_PTE ; i++) {
-        pg_set_entry(ptb + i, PG_KRN|PG_RW, page_nr(PAGINATION_USER_VIRTUAL_BASE) + i) ;
-    }*/
+    // Prepare a single PGD.
+    pg_set_entry(pgd, PG_USR|PG_RW, page_nr(ptb)) ;
 
-    return base ;
+    // Only prepare the first PGD entries.
+    for(uint32_t j = 0 ; j < PAGINATION_NBR_PTE_USR ; j++) {
+        pg_set_entry(ptb + j, PG_USR|PG_RW, j) ;
+    }
 }
 
 /**
@@ -77,6 +72,12 @@ void page_translate(uint32_t base, uint32_t physical, uint32_t virtual, int attr
     uint32_t pd_index = pd32_idx(virtual) ;
     uint32_t pt_index = pt32_idx(virtual) ;
 
-    pte32_t * ptb = (pte32_t *) pg_pte(base, pd_index) ;
+    pte32_t * ptb ;
+    if((attributes & PG_USR) == PG_USR) {
+        ptb = (pte32_t *) pg_pte_usr(base, pd_index) ;
+    } else {
+        ptb = (pte32_t *) pg_pte_krn(pd_index) ;
+    }
+
     pg_set_entry(ptb + pt_index, attributes, page_nr(physical)) ;
 }

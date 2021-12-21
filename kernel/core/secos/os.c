@@ -42,6 +42,16 @@ void secos_initialize() {
     // Start pagination.
     page_kernel_init() ;
 
+    // Start pagination.
+    set_cr3(pg_pgd(PAGINATION_BASE_KRN)) ;
+    set_cr0(get_cr0() | CR0_PG) ;
+
+    // Set the user segments.
+    set_ds(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+    set_es(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+    set_fs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+    set_gs(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;
+
     // Really start the OS.
     force_interrupts_on() ;
 }
@@ -54,13 +64,14 @@ void secos_initialize() {
 void secos_add_task(void * main) {
     force_interrupts_off() ;
 
-    uint32_t pid = task_add(main) ;
-    page_user_init(pid) ;
+    // Add the task to the array.
+    t_task * task = task_add(main) ;
+    page_user_init(task->pgd_base) ;
 
-    /*
-    uint32_t base = pg_base(pid) ;
-    int ptb_addr  = pg_pte(PAGINATION_KERNEL_BASE, 10) ;
-    page_translate(PAGINATION_KERNEL_BASE, base, ptb_addr, PG_KRN|PG_RW) ;*/
+    // Make the pagination.
+    page_translate(task->pgd_base, task->code_addr, task->code_addr, PG_USR|PG_RO) ; // Code page.
+    page_translate(task->pgd_base, task->stack_usr_addr, task->stack_usr_addr, PG_USR|PG_RW) ; // Stack page.
+    page_translate(task->pgd_base, task->stack_krn_addr, task->stack_krn_addr, PG_KRN|PG_RW) ; // Stack page.
 
     force_interrupts_on() ;
 }
