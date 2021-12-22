@@ -24,4 +24,11 @@ void secos_initialize() ;
  */
 void secos_add_task(void * main) ;
 
+/**
+ * Start the OS.
+ *
+ * @return void
+ */
+void secos_start() ;
+
 #endif

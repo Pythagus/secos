@@ -16,7 +16,7 @@
 #include <secos/task.h>
 #include <secos/page.h>
 
-#define TASK_ARRAY_SIZE 16
+#define TASK_ARRAY_SIZE 3
 
 /*
  * The task array containing all the
@@ -37,13 +37,15 @@ t_task * current_task = NULL ;
  */
 t_task * last_task = NULL ;
 
+extern tss_t tss ;
+
 /**
  * Add a new task to the array.
  *
  * @param main
  * @return the task struct pointer.
  */
-t_task * task_add(void * main) {
+t_task * task_add(uint32_t main) {
     t_task * addr = NULL ;
 
     // If there is no tasks.
@@ -64,10 +66,9 @@ t_task * task_add(void * main) {
         }
     }
 
-    addr->present   = 1 ;
-    addr->executed  = 0 ;
-    addr->code_addr = (uint32_t) ((uint32_t *) main) ;
-    addr->eip = addr->code_addr ;
+    addr->present  = 1 ;
+    addr->executed = 0 ;
+    addr->eip = main ;
 
     // Set the task at the end of the list.
     t_task * tmp    = last_task->next ;
@@ -91,65 +92,40 @@ t_task * task_add(void * main) {
  * @param ctx
  */
 void irq0_timer_callback(int_ctx_t * ctx) {
+    outb(PIC_EOI, PIC1) ;
+
+    printf("hello\n") ;
+
     if(current_task != NULL) {
-        //printf("Je switch : %x, %x\n", current_task->eip, ctx->eip) ;
+        printf("Je switch : %x, %x\n", current_task->eip, ctx->eip) ;
 
         if(current_task->executed) {
             // Save context values.
-            current_task->ebp = ctx->gpr.ebp.raw ;
-            current_task->esp = ctx->gpr.esp.raw ;
+            current_task->stack_usr_ebp = ctx->gpr.ebp.raw ;
+            current_task->stack_usr_esp = ctx->gpr.esp.raw ;
             current_task->eip = ctx->eip.raw ;
-
-            /* // Save ALU flags.
-             __asm__ volatile ("PUSHF") ;
-
-             // Save global registers values.
-             __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.eax)) ;
-             __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.ebx)) ;
-             __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.ecx)) ;
-             __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.edx)) ;
-             __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.esi)) ;
-             __asm__ volatile ("PUSHL %0" :: "b"(ctx->gpr.edi)) ;*/
 
             // Go to the next task.
             current_task = current_task->next ;
-/*
-            // If executed, restore the CPU/ALU registers.
-            if(current_task->executed) {
-                // Set the ALU flags.
-                __asm__ volatile ("POPF") ;
-
-                // Set the global registers values.
-                __asm__ volatile ("POPL %eax") ;
-                __asm__ volatile ("POPL %ebx") ;
-                __asm__ volatile ("POPL %ecx") ;
-                __asm__ volatile ("POPL %edx") ;
-                __asm__ volatile ("POPL %esi") ;
-                __asm__ volatile ("POPL %edi") ;
-            }*/
         }
 
         current_task->executed = 1 ;
 
-        // Restore the pagination area.
-        //printf("WAITING : %x\n", current_task->pgd_base) ;
-
-        // 0x301fa0
         set_cr3(current_task->pgd_base) ;
+        tss.s0.esp = current_task->stack_krn_esp ;
 
-        // Prepare to jump to the next task.
-        void * task_ptr = (void *) current_task->eip ;
+        void * eip = (void *) current_task->eip ;
+        printf("EIP = %x, PGD = %x\n", eip, current_task->pgd_base) ;
         __asm__ volatile ("MOV %esp, %eax");
         __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
         __asm__ volatile ("PUSHl %eax") ; // ESP
         __asm__ volatile ("PUSHF") ; // E flags.
         __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_CODE_R3_SEG, RING_3))) ; // CS
-        __asm__ volatile ("PUSHl %%ebx"::"b"(task_ptr)) ; // EIP
+        __asm__ volatile ("PUSHl %%ebx"::"b"(eip)) ; // EIP
         __asm__ volatile ("IRET") ;
     }
 
     // Send an ACK to the timer.
-    outb(PIC_EOI, PIC1) ;
     force_interrupts_on() ;
 }
 
@@ -170,9 +146,9 @@ void task_initialize() {
         task->pgd_base = pg_base_usr(i) ;
 
         // Prepare the stack.
-        task->stack_usr_addr = pg_stack_usr(i) ;
-        task->stack_krn_addr = pg_stack_krn(i) ;
-        task->ebp = task->stack_usr_addr ;
-        task->esp = task->ebp ;
+        task->stack_usr_ebp = pg_stack_usr(i) ;
+        task->stack_usr_esp = task->stack_usr_ebp ;
+        task->stack_krn_ebp = pg_stack_krn(i) ;
+        task->stack_krn_esp = task->stack_krn_ebp ;
     }
 }

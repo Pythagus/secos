@@ -19,58 +19,30 @@
 // Size of the PTE struct.
 #define PTE_SIZE sizeof(pte32_t)
 
-// Get the PGD base address.
-#define pg_pgd(__base__) (__base__)
+// Size of the PGD area.
+#define PAGINATION_BASE_SZE 0x010000
 
-// Where the Kernel pagination table starts.
-#define PAGINATION_BASE_KRN 0x1000000
+// PGD base for the Kernel pagination.
+#define PAGINATION_BASE_KRN 0x350000
 
-// Where the User pagination table starts.
-#define PAGINATION_BASE_USR 0x400000
+// PGD base for the User pagination.
+#define PAGINATION_BASE_USR (PAGINATION_BASE_KRN + PAGINATION_BASE_SZE)
+
+// Get the PGD base.
+#define pg_base_usr(__i__) (PAGINATION_BASE_USR + __i__ * PAGINATION_BASE_SZE)
+
+// Get the address of the first PGD.
+#define pg_pde(__base__) ((pde32_t *) (__base__))
+
+// Get the address of the i-th PGD entry.
+#define pg_pte(__base__, __i__) ((pte32_t *) (__base__ + 1024 * PGD_SIZE + __i__ * 1024 * PTE_SIZE))
+
+//=================================//
+//========== STACK MACRO ==========//
+//=================================//
 
 // Physical stack base addr for users.
 #define PAGINATION_STACKS_BASE 0x900000
-
-//=================================//
-//======= KERNEL PAGINATION =======//
-//=================================//
-
-// How many PDT a Kernel PGD can have.
-#define PAGINATION_NBR_PTE_KRN 1024
-
-// How many PGD there is in a kernel area.
-#define PAGINATION_NBR_PGD_KRN 1024
-
-// Size of a full PGD entry (i.e. table).
-#define PGD_ENTRY_SIZE_KRN (PAGINATION_NBR_PTE_KRN * PTE_SIZE)
-
-// Size of a full pagination area.
-#define PAGINATION_AREA_SIZE_KRN (PAGINATION_NBR_PGD_KRN * (PGD_SIZE + PAGINATION_NBR_PTE_KRN * PTE_SIZE))
-
-// Get the PTE base address.
-#define pg_pte_krn(__pgd__) (PAGINATION_BASE_KRN + PAGINATION_NBR_PGD_KRN * PGD_SIZE + __pgd__ * PGD_ENTRY_SIZE_KRN)
-
-//=================================//
-//======== USER PAGINATION ========//
-//=================================//
-
-// How many PDT a user PGD can have.
-#define PAGINATION_NBR_PTE_USR 20
-
-// How many PGD there is in a user area.
-#define PAGINATION_NBR_PGD_USR PAGINATION_NBR_PGD_KRN
-
-// Size of a full PGD entry (i.e. table).
-#define PGD_ENTRY_SIZE_USR (PAGINATION_NBR_PTE_USR * PTE_SIZE)
-
-// Size of a full pagination area.
-#define PAGINATION_AREA_SIZE_USR (PAGINATION_NBR_PGD_USR * (PGD_SIZE + PAGINATION_NBR_PTE_USR * PTE_SIZE))
-
-// Get the PTE base address.
-#define pg_pte_usr(__base__, __pgd__) (__base__ + PAGINATION_NBR_PGD_USR * PGD_SIZE + __pgd__ * PGD_ENTRY_SIZE_USR)
-
-// Get the PGD base.
-#define pg_base_usr(__i__) (PAGINATION_BASE_USR + __i__ * PAGINATION_AREA_SIZE_USR)
 
 // Private macro to get the i-th stack.
 #define _pg_stack_th(__th__) (PAGINATION_STACKS_BASE + __th__ * PAGE_SIZE + PAGE_SIZE - 1)

@@ -45,7 +45,7 @@ void prepare_user_land() {
 
 void tp() {
     gdt_init() ;
-    gdt_seg_init(GDT_CODE_RO_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
+    gdt_seg_init(GDT_CODE_R0_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
     gdt_seg_init(GDT_DATA_R0_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_KRN | GDT_G) ;
     gdt_seg_init(GDT_CODE_R3_SEG, SEG_DESC_CODE_XR, 0, 0xFFFFF, GDT_USR | GDT_G) ;
     gdt_seg_init(GDT_DATA_R3_SEG, SEG_DESC_DATA_RW, 0, 0xFFFFF, GDT_USR | GDT_G) ;
@@ -57,7 +57,7 @@ void tp() {
     set_es(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
     set_fs(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
     set_gs(gdt_seg_sel(GDT_DATA_R0_SEG, RING_0)) ;
-    set_cs(gdt_seg_sel(GDT_CODE_RO_SEG, RING_0)) ;
+    set_cs(gdt_seg_sel(GDT_CODE_R0_SEG, RING_0)) ;
 
     gdt_display() ;
     prepare_user_land() ;

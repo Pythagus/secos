@@ -16,21 +16,17 @@
  * @return void
  */
 void page_kernel_init() {
-    pte32_t * ptb ;
-    pde32_t * pgd = (pde32_t *) pg_pgd(PAGINATION_BASE_KRN) ;
+    pde32_t * pgd = pg_pde(PAGINATION_BASE_KRN) ;
+    pte32_t * ptb = pg_pte(PAGINATION_BASE_KRN, 0) ;
 
-    // Clean the memory area.
-    memset(pgd, 0, PAGINATION_AREA_SIZE_KRN) ;
+    // Clean up the memory area.
+    memset(pgd, 0, PAGE_SIZE) ;
 
-    // Prepare all PGD entries.
-    for(uint32_t i = 0 ; i < PAGINATION_NBR_PGD_KRN ; i++) {
-        ptb = (pte32_t *) pg_pte_krn(i) ;
-        pg_set_entry(pgd + i, PG_KRN|PG_RW, page_nr(ptb)) ;
-
-        for(uint32_t j = 0 ; j < PAGINATION_NBR_PTE_KRN ; j++) {
-            pg_set_entry(ptb + j, PG_KRN|PG_RW, j) ;
-        }
+    for(uint32_t i = 0 ; i < PTE32_PER_PT ; i++) {
+        pg_set_entry(ptb + i, PG_KRN|PG_RW, i) ;
     }
+
+    pg_set_entry(pgd, PG_KRN|PG_RW, page_nr(ptb)) ;
 }
 
 /**
@@ -39,23 +35,25 @@ void page_kernel_init() {
  * @param base
  */
 void page_user_init(uint32_t base) {
-    pte32_t * ptb = (pte32_t *) pg_pte_usr(base, 0) ;
-    pde32_t * pgd = (pde32_t *) pg_pgd(base) ;
+    pde32_t * pgd  = pg_pde(base) ;
+    pde32_t * pgd2 = pgd + 2 ;
+    pte32_t * ptb0 = pg_pte(base, 0) ;
+    pte32_t * ptb2 = pg_pte(base, 2) ;
 
-    printf("BASE  = %x (%x)\n", base, PAGINATION_AREA_SIZE_USR) ;
-    printf("- pgd = %x\n", pgd) ;
-    printf("- ptb = %x\n", ptb) ;
+    // Clean up the memory area.
+    memset(pgd, 0, PAGE_SIZE) ;
+    memset(pgd2, 0, PAGE_SIZE) ;
 
-    // Clean the memory area.
-    memset(pgd, 0, PAGINATION_AREA_SIZE_USR) ;
-
-    // Prepare a single PGD.
-    pg_set_entry(pgd, PG_USR|PG_RW, page_nr(ptb)) ;
-
-    // Only prepare the first PGD entries.
-    for(uint32_t j = 0 ; j < PAGINATION_NBR_PTE_USR ; j++) {
-        pg_set_entry(ptb + j, PG_USR|PG_RW, j) ;
+    for(uint32_t i = 0 ; i < PTE32_PER_PT ; i++) {
+        pg_set_entry(ptb0 + i, PG_USR|PG_RW, i) ;
     }
+
+    for(uint32_t i = 0 ; i < PTE32_PER_PT ; i++) {
+        pg_set_entry(ptb2, PG_USR|PG_RW, i) ;
+    }
+
+    pg_set_entry(pgd, PG_USR|PG_RW, page_nr(ptb0)) ;
+    pg_set_entry(pgd2, PG_USR|PG_RW, page_nr(ptb2)) ;
 }
 
 /**
@@ -71,13 +69,7 @@ void page_translate(uint32_t base, uint32_t physical, uint32_t virtual, int attr
     // Important indexes to add page translation.
     uint32_t pd_index = pd32_idx(virtual) ;
     uint32_t pt_index = pt32_idx(virtual) ;
-
-    pte32_t * ptb ;
-    if((attributes & PG_USR) == PG_USR) {
-        ptb = (pte32_t *) pg_pte_usr(base, pd_index) ;
-    } else {
-        ptb = (pte32_t *) pg_pte_krn(pd_index) ;
-    }
+    pte32_t * ptb     = pg_pte(base, pd_index) ;
 
     pg_set_entry(ptb + pt_index, attributes, page_nr(physical)) ;
 }

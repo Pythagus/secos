@@ -18,6 +18,5 @@ void tp() {
     secos_initialize() ;
     secos_add_task(&userland_1) ;
     secos_add_task(&userland_2) ;
-
-    while(1) ;
+    secos_start() ;
 }

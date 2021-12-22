@@ -19,15 +19,16 @@ struct t_task {
     // Has the task been run at least once?
     uint8_t executed:1 ;
 
-    // The code start addr.
-    uint32_t code_addr ;
+    // Stack Kernel addresses.
+    uint32_t stack_krn_ebp ;
+    uint32_t stack_krn_esp ;
 
-    // Stack base.
-    uint32_t stack_usr_addr ;
-    uint32_t stack_krn_addr ;
+    // Stack User addresses
+    uint32_t stack_usr_esp ;
+    uint32_t stack_usr_ebp ;
 
-    // Stack variables.
-    uint32_t esp, ebp, eip ;
+    // Code address.
+    uint32_t eip ;
 
     // Pagination credentials.
     uint32_t pgd_base ;
@@ -52,7 +53,7 @@ void task_initialize() ;
  * @param main
  * @return the task struct pointer.
  */
-t_task * task_add(void * main) ;
+t_task * task_add(uint32_t main) ;
 
 /**
  * Function executed each time the
