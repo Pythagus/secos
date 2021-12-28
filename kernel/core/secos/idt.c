@@ -7,6 +7,7 @@
  */
 
 #include <intr.h>
+#include <secos/idt.h>
 
 /**
  * Set the handler as the new
@@ -15,8 +16,9 @@
  * @param index
  * @param handler
  * @param dpl
+ * @param type
  */
-void idt_set_handler(int index, void * handler, int dpl) {
+void idt_set_handler(int index, void * handler, int dpl, int type) {
     idt_reg_t idtr ;
     get_idtr(idtr) ;
 
@@ -24,4 +26,5 @@ void idt_set_handler(int index, void * handler, int dpl) {
     int_desc(&idtr.desc[index], desc->selector, (offset_t) handler) ;
     desc->dpl = dpl ;
     desc->p   = 1 ;
+    desc->type = type ;
 }

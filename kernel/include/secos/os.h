@@ -9,6 +9,10 @@
 #ifndef SECOS_OS_H
 #define SECOS_OS_H
 
+// Specify a function section to force the
+// compilation address of the function.
+#define ATTR_SECTION(__section__) __attribute__((section(__section__)))
+
 /**
  * Initialize the SecOS main features
  * required to be working.

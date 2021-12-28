@@ -25,7 +25,7 @@ void userland() {
 
 void prepare_user_land() {
     // Add int48 handler.
-    idt_set_handler(48, syscall_isr, RING_3) ;
+    idt_set_handler_intr(48, syscall_isr, RING_3) ;
 
     // Loading the registers.
     set_ds(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3)) ;

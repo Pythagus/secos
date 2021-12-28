@@ -33,8 +33,8 @@ void secos_initialize() {
     gdt_prepare_tss() ;
 
     // Initializing the IDT.
-    idt_set_handler(IDT_SYSCALL_INDEX, syscall_isr, RING_3) ;
-    idt_set_handler(IDT_IRQ0_INDEX, irq0_timer_callback,  RING_0) ;
+    idt_set_handler_intr(IDT_SYSCALL_INDEX, syscall_isr, RING_3) ;
+    idt_set_handler_trap(IDT_IRQ0_INDEX, irq0_timer_callback,  RING_0) ;
 
     // Initialize the multitasking.
     task_initialize() ;
@@ -53,10 +53,20 @@ void secos_add_task(void * main) {
     t_task * task = task_add((uint32_t) main) ;
     page_user_init(task->pgd_base) ;
 
+    printf("====> Task : %x\n", task->eip) ;
+
     // Make the pagination.
-    page_translate(task->pgd_base, task->eip, task->eip, PG_USR|PG_RW) ; // Code page.
-    page_translate(task->pgd_base, task->stack_krn_ebp, task->stack_krn_ebp, PG_KRN|PG_RW) ; // Code page.
-    page_translate(task->pgd_base, 0x302010, 0x302010, PG_KRN|PG_RO) ; // Code page.
+    //printf("IDENTITY : %x\n", task->eip) ;
+    page_translate_identity(task->pgd_base, task->eip, PG_USR|PG_RW) ; // Code page.
+    //printf("<===== END\n") ;
+    page_translate_identity(task->pgd_base, task->stack_krn_ebp, PG_USR|PG_RW) ; // Code page.
+    page_translate_identity(task->pgd_base, 0x302010, PG_USR|PG_RW) ; // Code page.
+
+    // We need to paginate all the Kernel pages
+    // to make the task switcher working.
+    for(uint32_t i = 0 ; i < TASK_ARRAY_SIZE ; i++) {
+        page_translate_identity(task->pgd_base, pg_stack_krn(i), PG_USR|PG_RW) ;
+    }
 }
 
 /**

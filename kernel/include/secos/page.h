@@ -58,14 +58,30 @@
  *
  * @return void
  */
-void page_kernel_init() ;
+#define page_kernel_init() ({ \
+    pg_identity_map(PAGINATION_BASE_KRN, 0, PG_KRN|PG_RW) ; \
+})
 
 /**
  * Prepare the user pages.
  *
  * @param base
  */
-void page_user_init(uint32_t base) ;
+#define page_user_init(__base__) ({  \
+    pg_identity_map(__base__, 0, PG_USR|PG_RW) ; \
+    pg_identity_map(__base__, 1, PG_USR|PG_RW) ; \
+    pg_identity_map(__base__, 2, PG_USR|PG_RW) ; \
+})
+
+/**
+ * Add a page translation for the given
+ * addresses.
+ *
+ * @param base (virtual)
+ * @param address
+ * @param attributes
+ */
+#define page_translate_identity(__base__, __addr__, __attr__) (page_translate(__base__, __addr__, __addr__, __attr__))
 
 /**
  * Add a page translation for the given
@@ -77,5 +93,23 @@ void page_user_init(uint32_t base) ;
  * @param attributes
  */
 void page_translate(uint32_t base, uint32_t physical, uint32_t virtual, int attributes) ;
+
+/**
+ * Identity map a full PTB.
+ *
+ * @param base
+ * @param pgd_id
+ * @param pg_attr
+ */
+void pg_identity_map(uint32_t base, uint32_t pgd_id, int pg_attr) ;
+
+/**
+ * Display the pagination.
+ *
+ * @param pgd
+ * @param nbr_pgd
+ * @param nbr_pde
+ */
+void page_display(pde32_t * pgd, uint32_t nbr_pgd, uint32_t nbr_pde) ;
 
 #endif

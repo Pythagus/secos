@@ -4,12 +4,12 @@
 
 extern info_t * info ;
 
-void userland_1() {
+void ATTR_SECTION(".user1") userland_1() {
     printf("COUCOU 1\n") ;
     while(1) ;
 }
 
-void userland_2() {
+void ATTR_SECTION(".user2") userland_2() {
     printf("COUCOU 2\n") ;
     while(1) ;
 }

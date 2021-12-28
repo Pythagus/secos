@@ -9,6 +9,8 @@
 #ifndef SECOS_TASK_H
 #define SECOS_TASK_H
 
+#define TASK_ARRAY_SIZE 3
+
 #include <intr.h>
 
 typedef struct t_task t_task ;
@@ -62,6 +64,6 @@ t_task * task_add(uint32_t main) ;
  *
  * @return void
  */
-void irq0_timer_callback(int_ctx_t * ctx) ;
+void irq0_timer_callback() ;
 
 #endif

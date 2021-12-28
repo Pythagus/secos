@@ -8,15 +8,12 @@
 
 #include <io.h>
 #include <pic.h>
-#include <asm.h>
 #include <types.h>
 #include <debug.h>
 #include <string.h>
 #include <secos/gdt.h>
 #include <secos/task.h>
 #include <secos/page.h>
-
-#define TASK_ARRAY_SIZE 3
 
 /*
  * The task array containing all the
@@ -91,19 +88,15 @@ t_task * task_add(uint32_t main) {
  *
  * @param ctx
  */
-void irq0_timer_callback(int_ctx_t * ctx) {
+void irq0_timer_callback() {
     outb(PIC_EOI, PIC1) ;
 
-    printf("hello\n") ;
-
     if(current_task != NULL) {
-        printf("Je switch : %x, %x\n", current_task->eip, ctx->eip) ;
+        printf("Je switch : %x (task %d)\n", current_task->eip, current_task->pid) ;
 
         if(current_task->executed) {
             // Save context values.
-            current_task->stack_usr_ebp = ctx->gpr.ebp.raw ;
-            current_task->stack_usr_esp = ctx->gpr.esp.raw ;
-            current_task->eip = ctx->eip.raw ;
+            __asm__ volatile("mov 4(%%ebp), %%eax" : "=a"(current_task->eip)) ;
 
             // Go to the next task.
             current_task = current_task->next ;
@@ -111,12 +104,12 @@ void irq0_timer_callback(int_ctx_t * ctx) {
 
         current_task->executed = 1 ;
 
+        void * eip = (void *) current_task->eip ;
+
         set_cr3(current_task->pgd_base) ;
         tss.s0.esp = current_task->stack_krn_esp ;
 
-        void * eip = (void *) current_task->eip ;
-        printf("EIP = %x, PGD = %x\n", eip, current_task->pgd_base) ;
-        __asm__ volatile ("MOV %esp, %eax");
+        __asm__ volatile ("MOV %esp, %eax") ;
         __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
         __asm__ volatile ("PUSHl %eax") ; // ESP
         __asm__ volatile ("PUSHF") ; // E flags.
@@ -124,9 +117,6 @@ void irq0_timer_callback(int_ctx_t * ctx) {
         __asm__ volatile ("PUSHl %%ebx"::"b"(eip)) ; // EIP
         __asm__ volatile ("IRET") ;
     }
-
-    // Send an ACK to the timer.
-    force_interrupts_on() ;
 }
 
 /**
@@ -143,6 +133,7 @@ void task_initialize() {
         memset(task, 0, sizeof(t_task)) ;
         task->pid = i + 1 ;
         task->present  = 0 ;
+        task->executed = 0 ;
         task->pgd_base = pg_base_usr(i) ;
 
         // Prepare the stack.
