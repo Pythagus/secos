@@ -55,10 +55,10 @@ void secos_add_task(void * main) {
     page_user_init(task->pgd_base) ;
 
     // Make the pagination.
-    page_translate_identity(task->pgd_base, task->eip, PG_USR|PG_RW) ; // Code page.
-    page_translate_identity(task->pgd_base, task->stack_krn_ebp, PG_USR|PG_RW) ; // Code page.
-    page_translate_identity(task->pgd_base, 0x302010, PG_USR|PG_RW) ; // Code page.
-    page_translate_identity(task->pgd_base, SHARED_ADDR, PG_USR|PG_RW) ;
+    page_translate_identity(task->pgd_base, task->eip, PG_USR|PG_RW) ; // Code page
+    page_translate_identity(task->pgd_base, task->stack_krn_ebp, PG_USR|PG_RW) ; // Kernel stack page.
+    page_translate_identity(task->pgd_base, 0x302010, PG_USR|PG_RW) ; // IDT page.
+    page_translate_identity(task->pgd_base, SHARED_ADDR, PG_USR|PG_RW) ; // Shared memory area page.
 
     // We need to paginate all the Kernel pages
     // to make the task switcher working.

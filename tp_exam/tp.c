@@ -19,14 +19,14 @@ void ATTR_SECTION(".user1") userland_1() {
 
 void ATTR_SECTION(".user2") userland_2() {
     printf("COUCOU 2\n") ;
-    //uint32_t * value_ptr   = (uint32_t *) SHARED_ADDR ;
-    //uint32_t * value_mutex = value_ptr + 1 ;
+    uint32_t * value_ptr   = (uint32_t *) SHARED_ADDR ;
+    uint32_t * value_mutex = value_ptr + 1 ;
 
     while(1) {
-        /*if(*value_mutex == 0) {
-            *value_mutex = 1 ;*/
+        if(*value_mutex == 0) {
+            *value_mutex = 1 ;
             __asm__ volatile ("INT $0x80" :: "S"(SHARED_ADDR)) ;
-        //}
+        }
     }
 }
 
