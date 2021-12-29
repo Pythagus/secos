@@ -3,7 +3,7 @@
  * to secure the OS.
  *
  * @author Damien MOLINA
- * @ðate 2021-11-28
+ * @date 2021-11-28
  * @see https://wiki.osdev.org/Paging
  */
 
@@ -79,7 +79,7 @@ void page_display(pde32_t * pgd, uint32_t nbr_pgd, uint32_t nbr_pde) {
 
                 printf("|  %4x  | ", j) ;
                 if(pte_i->p) {
-                    printf("  0x%6x   |   0x%6x  | ", virtual, page_addr(pte_i->addr), pte) ;
+                    printf("  0x%6x   |   0x%6x  | ", page_addr(pte_i->addr), virtual) ;
 
                     if(pte_i->lvl == 0UL) {
                         printf("K\n") ;

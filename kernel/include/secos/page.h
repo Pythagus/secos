@@ -3,7 +3,7 @@
  * to secure the OS.
  *
  * @author Damien MOLINA
- * @ðate 2021-11-26
+ * @date 2021-11-26
  * @see https://wiki.osdev.org/Paging
  */
 
