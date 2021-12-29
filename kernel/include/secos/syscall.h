@@ -18,12 +18,4 @@
  */
 void syscall_isr() ;
 
-/**
- * Manage the system call checking the
- * registers values.
- *
- * @param ctx
- */
-void __regparm__(1) syscall_handler(int_ctx_t * ctx) ;
-
 #endif

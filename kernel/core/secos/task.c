@@ -112,7 +112,7 @@ void irq0_timer_callback() {
         __asm__ volatile ("MOV %esp, %eax") ;
         __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
         __asm__ volatile ("PUSHl %eax") ; // ESP
-        __asm__ volatile ("PUSHF") ; // E flags.
+        __asm__ volatile ("PUSHf") ; // E flags.
         __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_CODE_R3_SEG, RING_3))) ; // CS
         __asm__ volatile ("PUSHl %%ebx"::"b"(eip)) ; // EIP
         __asm__ volatile ("IRET") ;

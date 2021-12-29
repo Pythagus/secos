@@ -8,6 +8,7 @@
 
 #include <asm.h>
 #include <print.h>
+#include <secos/os.h>
 #include <secos/gdt.h>
 #include <secos/idt.h>
 #include <secos/task.h>
@@ -53,14 +54,11 @@ void secos_add_task(void * main) {
     t_task * task = task_add((uint32_t) main) ;
     page_user_init(task->pgd_base) ;
 
-    printf("====> Task : %x\n", task->eip) ;
-
     // Make the pagination.
-    //printf("IDENTITY : %x\n", task->eip) ;
     page_translate_identity(task->pgd_base, task->eip, PG_USR|PG_RW) ; // Code page.
-    //printf("<===== END\n") ;
     page_translate_identity(task->pgd_base, task->stack_krn_ebp, PG_USR|PG_RW) ; // Code page.
     page_translate_identity(task->pgd_base, 0x302010, PG_USR|PG_RW) ; // Code page.
+    page_translate_identity(task->pgd_base, SHARED_ADDR, PG_USR|PG_RW) ;
 
     // We need to paginate all the Kernel pages
     // to make the task switcher working.

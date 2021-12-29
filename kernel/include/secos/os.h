@@ -13,6 +13,9 @@
 // compilation address of the function.
 #define ATTR_SECTION(__section__) __attribute__((section(__section__)))
 
+// Memory area the whole user processes share.
+#define SHARED_ADDR 0x700000
+
 /**
  * Initialize the SecOS main features
  * required to be working.

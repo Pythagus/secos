@@ -16,13 +16,13 @@
  * @return void
  */
 void syscall_isr() {
-    __asm__ volatile ("leave") ;
+    __asm__ volatile ("LEAVE") ;
     __asm__ volatile ("MOV %ebx, %esi") ;
-    __asm__ volatile ("pusha") ;
-    __asm__ volatile ("mov %esp, %eax") ;
-    __asm__ volatile ("call syscall_handler") ;
-    __asm__ volatile ("popa") ;
-    __asm__ volatile ("iret") ;
+    __asm__ volatile ("PUSHa") ;
+    __asm__ volatile ("MOV %esp, %eax") ;
+    __asm__ volatile ("CALL syscall_handler") ;
+    __asm__ volatile ("POPa") ;
+    __asm__ volatile ("IRET") ;
 }
 
 /**
@@ -31,7 +31,6 @@ void syscall_isr() {
  *
  * @param ctx
  */
-void __regparm__(1) syscall_handler(int_ctx_t *ctx) {
-    printf("SYSCALL eax = %p\n", ctx->gpr.eax);
-    printf("SYSCALL esi = %s, %x\n", ctx->gpr.esi, ctx->gpr.esi);
+void __regparm__(1) syscall_handler(int_ctx_t * ctx) {
+    printf("Value = %x\n", *((uint32_t *) ctx->gpr.eax.raw)) ;
 }
