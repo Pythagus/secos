@@ -22,15 +22,13 @@ struct t_task {
     uint8_t executed:1 ;
 
     // Stack Kernel addresses.
-    uint32_t stack_krn_ebp ;
     uint32_t stack_krn_esp ;
 
     // Stack User addresses
-    uint32_t stack_usr_esp ;
-    uint32_t stack_usr_ebp ;
+    uint32_t stack_usr_esp, stack_usr_ebp ;
 
-    // Code address.
-    uint32_t eip ;
+    // Registers.
+    uint32_t eip, eax, ebx, ecx, edx, esi, edi, eflags ;
 
     // Pagination credentials.
     uint32_t pgd_base ;

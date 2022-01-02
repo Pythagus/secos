@@ -9,12 +9,11 @@
 #ifndef SECOS_OS_H
 #define SECOS_OS_H
 
+#include <secos/task.h>
+
 // Specify a function section to force the
 // compilation address of the function.
 #define ATTR_SECTION(__section__) __attribute__((section(__section__)))
-
-// Memory area the whole user processes share.
-#define SHARED_ADDR 0x700000
 
 /**
  * Initialize the SecOS main features
@@ -28,8 +27,18 @@ void secos_initialize() ;
  * Add a task to the OS.
  *
  * @param main
+ * @return the task structure.
  */
-void secos_add_task(void * main) ;
+t_task * secos_add_task(void * main) ;
+
+/**
+ * Translate addresses for the given task.
+ *
+ * @param task
+ * @param physical
+ * @param virtual
+ */
+void secos_translate(t_task * task, uint32_t physical, uint32_t virtual) ;
 
 /**
  * Start the OS.

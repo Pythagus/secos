@@ -45,13 +45,13 @@
 #define PAGINATION_STACKS_BASE 0x900000
 
 // Private macro to get the i-th stack.
-#define _pg_stack_th(__th__) (PAGINATION_STACKS_BASE + __th__ * PAGE_SIZE + PAGE_SIZE - 1)
+#define _pg_stack_th(__th__) (PAGINATION_STACKS_BASE + (__th__) * PAGE_SIZE + PAGE_SIZE - 1)
 
 // Get the address of the i-th user stack.
-#define pg_stack_usr(__i__) _pg_stack_th(2 * __i__)
+#define pg_stack_usr(__i__) _pg_stack_th(2 * (__i__))
 
 // Get the address of the i-th kernel stack.
-#define pg_stack_krn(__i__) _pg_stack_th(2 * __i__ + 1)
+#define pg_stack_krn(__i__) _pg_stack_th(2 * (__i__) + 1)
 
 /**
  * Initialize the kernel pages.
@@ -60,6 +60,7 @@
  */
 #define page_kernel_init() ({ \
     pg_identity_map(PAGINATION_BASE_KRN, 0, PG_KRN|PG_RW) ; \
+    pg_identity_map(PAGINATION_BASE_KRN, 2, PG_KRN|PG_RW) ; \
 })
 
 /**

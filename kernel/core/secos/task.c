@@ -15,6 +15,21 @@
 #include <secos/task.h>
 #include <secos/page.h>
 
+#define ITERATE_REGISTERS(__macro__) ({ \
+    __macro__(eax) ; \
+    __macro__(ebx) ; \
+    __macro__(ecx) ; \
+    __macro__(edx) ; \
+    __macro__(esi) ; \
+    __macro__(edi) ; \
+})
+
+// Save the registers into the current_task variable.
+#define SAVE_REGISTER(__reg__) current_task->__reg__ = get_reg(__reg__)
+
+// Restore the registers.
+#define RESTORE_REGISTER(__reg__) set_reg(__reg__, current_task->__reg__)
+
 /*
  * The task array containing all the
  * tasks' data.
@@ -88,33 +103,84 @@ t_task * task_add(uint32_t main) {
  *
  * @param ctx
  */
+ int tata = 0 ;
+
+#define STEP_PRINT 0
+#define STEP(__text__) ({ \
+    __asm__ volatile ("POP %0" : "=r"(tata)) ;   \
+    if(STEP_PRINT) printf("tata = %x (%s)\n", tata, __text__) ; \
+})
+
 void irq0_timer_callback() {
     outb(PIC_EOI, PIC1) ;
 
     if(current_task != NULL) {
-        printf("Je switch : %x (task %d)\n", current_task->eip, current_task->pid) ;
+        if(0)
+            printf("Je switch : %x (task %d)\n", current_task->eip, current_task->pid) ;
 
         if(current_task->executed) {
-            // Save context values.
-            __asm__ volatile("mov 4(%%ebp), %%eax" : "=a"(current_task->eip)) ;
+            // Save user stack esp.
+            //__asm__ volatile ("MOV 16(%%ebp), %%eax" : "=a"(current_task->stack_usr_ebp)) ;
+
+            // Save context value.
+            //__asm__ volatile("MOV 4(%%ebp), %%eax" : "=a"(current_task->eip)) ;
+
+            if(STEP_PRINT)
+                printf("\n====> START : (%x, %x)\n", current_task->stack_usr_ebp, current_task->stack_usr_esp) ;
+            STEP("") ;
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("EBP R3");
+            current_task->stack_usr_ebp = tata ;
+            STEP("EIP");
+            current_task->eip = tata ;
+            STEP("");
+            STEP("");
+            STEP("ESP R3");
+            current_task->stack_usr_esp = tata ;
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+            STEP("");
+
+            if(STEP_PRINT) {
+                printf("==== User (EBP : %x, ESP : %x)\n", current_task->stack_usr_ebp, current_task->stack_usr_esp) ;
+                printf("==== kernel (ESP : %x)\n\n", current_task->stack_krn_esp) ;
+            }
+
+            // Save the registers.
+            ITERATE_REGISTERS(SAVE_REGISTER) ;
 
             // Go to the next task.
             current_task = current_task->next ;
+
+            // Restore the registers
+            ITERATE_REGISTERS(RESTORE_REGISTER) ;
         }
 
         current_task->executed = 1 ;
 
-        void * eip = (void *) current_task->eip ;
-
-        set_cr3(current_task->pgd_base) ;
         tss.s0.esp = current_task->stack_krn_esp ;
+        set_cr3(current_task->pgd_base) ;
+        set_ebp(current_task->stack_usr_ebp) ;
 
-        __asm__ volatile ("MOV %esp, %eax") ;
-        __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
-        __asm__ volatile ("PUSHl %eax") ; // ESP
-        __asm__ volatile ("PUSHf") ; // E flags.
-        __asm__ volatile ("PUSHl %0" :: "i"(gdt_seg_sel(GDT_CODE_R3_SEG, RING_3))) ; // CS
-        __asm__ volatile ("PUSHl %%ebx"::"b"(eip)) ; // EIP
+        // Save the current eflags (ALU flags).
+        save_flags(current_task->eflags) ;
+        current_task->eflags = current_task->eflags | EFLAGS_IF ;
+
+        // Prepare the IRET.
+        __asm__ volatile ("PUSHl %0"    :: "i"(gdt_seg_sel(GDT_DATA_R3_SEG, RING_3))) ; // DS (SS)
+        __asm__ volatile ("PUSHl %%ebx" :: "b"(current_task->stack_usr_esp)) ; // ESP
+        __asm__ volatile ("PUSH %0"     :: "m"(current_task->eflags)) ; // E flags.
+        __asm__ volatile ("PUSHl %0"    :: "i"(gdt_seg_sel(GDT_CODE_R3_SEG, RING_3))) ; // CS
+        __asm__ volatile ("PUSHl %%ebx" :: "b"((void *) current_task->eip)) ; // EIP
         __asm__ volatile ("IRET") ;
     }
 }
@@ -137,9 +203,8 @@ void task_initialize() {
         task->pgd_base = pg_base_usr(i) ;
 
         // Prepare the stack.
-        task->stack_usr_ebp = pg_stack_usr(i) ;
-        task->stack_usr_esp = task->stack_usr_ebp ;
-        task->stack_krn_ebp = pg_stack_krn(i) ;
-        task->stack_krn_esp = task->stack_krn_ebp ;
+        task->stack_usr_esp = pg_stack_usr(i) ;
+        task->stack_usr_ebp = task->stack_usr_esp ;
+        task->stack_krn_esp = pg_stack_krn(i) ;
     }
 }

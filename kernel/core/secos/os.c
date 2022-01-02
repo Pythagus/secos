@@ -11,7 +11,6 @@
 #include <secos/os.h>
 #include <secos/gdt.h>
 #include <secos/idt.h>
-#include <secos/task.h>
 #include <secos/page.h>
 #include <secos/syscall.h>
 
@@ -35,7 +34,7 @@ void secos_initialize() {
 
     // Initializing the IDT.
     idt_set_handler_intr(IDT_SYSCALL_INDEX, syscall_isr, RING_3) ;
-    idt_set_handler_trap(IDT_IRQ0_INDEX, irq0_timer_callback,  RING_0) ;
+    idt_set_handler_trap(IDT_IRQ0_INDEX, irq0_timer_callback, RING_0) ;
 
     // Initialize the multitasking.
     task_initialize() ;
@@ -48,23 +47,36 @@ void secos_initialize() {
  * Add a task to the OS.
  *
  * @param main
+ * @return the task structure.
  */
-void secos_add_task(void * main) {
-    // Add the task to the array.
+t_task * secos_add_task(void * main) {
+    // Add the task to the array
     t_task * task = task_add((uint32_t) main) ;
     page_user_init(task->pgd_base) ;
 
     // Make the pagination.
     page_translate_identity(task->pgd_base, task->eip, PG_USR|PG_RW) ; // Code page
-    page_translate_identity(task->pgd_base, task->stack_krn_ebp, PG_USR|PG_RW) ; // Kernel stack page.
+    page_translate_identity(task->pgd_base, task->stack_krn_esp, PG_USR|PG_RW) ; // Kernel stack page.
     page_translate_identity(task->pgd_base, 0x302010, PG_USR|PG_RW) ; // IDT page.
-    page_translate_identity(task->pgd_base, SHARED_ADDR, PG_USR|PG_RW) ; // Shared memory area page.
 
     // We need to paginate all the Kernel pages
     // to make the task switcher working.
     for(uint32_t i = 0 ; i < TASK_ARRAY_SIZE ; i++) {
         page_translate_identity(task->pgd_base, pg_stack_krn(i), PG_USR|PG_RW) ;
     }
+
+    return task ;
+}
+
+/**
+ * Translate addresses for the given task.
+ *
+ * @param task
+ * @param physical
+ * @param virtual
+ */
+void secos_translate(t_task * task, uint32_t physical, uint32_t virtual) {
+    page_translate(task->pgd_base, physical, virtual, PG_USR|PG_RW) ;
 }
 
 /**

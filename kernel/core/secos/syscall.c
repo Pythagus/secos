@@ -32,5 +32,5 @@ void syscall_isr() {
  * @param ctx
  */
 void __regparm__(1) syscall_handler(int_ctx_t * ctx) {
-    printf("Value = %x\n", *((uint32_t *) ctx->gpr.eax.raw)) ;
+    printf("Value = %d\n", *((uint32_t *) ctx->gpr.eax.raw)) ;
 }
