@@ -33,4 +33,7 @@ SECTIONS
 
    . = 0x401000 ;
    .user2    : { KEEP(*(.user2)) . = ALIGN(4) ; } : phsetup
+
+   . = 0x402000 ;
+   .sys_counter    : { KEEP(*(.sys_counter)) . = ALIGN(4) ; } : phsetup
 }

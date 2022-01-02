@@ -15,6 +15,7 @@
 #include <secos/task.h>
 #include <secos/page.h>
 
+// Iterate the given macro on the registers.
 #define ITERATE_REGISTERS(__macro__) ({ \
     __macro__(eax) ; \
     __macro__(ebx) ; \
@@ -29,6 +30,12 @@
 
 // Restore the registers.
 #define RESTORE_REGISTER(__reg__) set_reg(__reg__, current_task->__reg__)
+
+// Pop the stack top value, but do nothing with it.
+#define POP_TRASH __asm__ volatile ("POP %eax")
+
+// Pop the stack top value and store it in __var__.
+#define POP_SAVE(__var__) __asm__ volatile ("POP %0" : "=r"(__var__))
 
 /*
  * The task array containing all the
@@ -103,57 +110,30 @@ t_task * task_add(uint32_t main) {
  *
  * @param ctx
  */
- int tata = 0 ;
-
-#define STEP_PRINT 0
-#define STEP(__text__) ({ \
-    __asm__ volatile ("POP %0" : "=r"(tata)) ;   \
-    if(STEP_PRINT) printf("tata = %x (%s)\n", tata, __text__) ; \
-})
-
 void irq0_timer_callback() {
     outb(PIC_EOI, PIC1) ;
 
     if(current_task != NULL) {
-        if(0)
-            printf("Je switch : %x (task %d)\n", current_task->eip, current_task->pid) ;
-
         if(current_task->executed) {
-            // Save user stack esp.
-            //__asm__ volatile ("MOV 16(%%ebp), %%eax" : "=a"(current_task->stack_usr_ebp)) ;
-
-            // Save context value.
-            //__asm__ volatile("MOV 4(%%ebp), %%eax" : "=a"(current_task->eip)) ;
-
-            if(STEP_PRINT)
-                printf("\n====> START : (%x, %x)\n", current_task->stack_usr_ebp, current_task->stack_usr_esp) ;
-            STEP("") ;
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("EBP R3");
-            current_task->stack_usr_ebp = tata ;
-            STEP("EIP");
-            current_task->eip = tata ;
-            STEP("");
-            STEP("");
-            STEP("ESP R3");
-            current_task->stack_usr_esp = tata ;
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-            STEP("");
-
-            if(STEP_PRINT) {
-                printf("==== User (EBP : %x, ESP : %x)\n", current_task->stack_usr_ebp, current_task->stack_usr_esp) ;
-                printf("==== kernel (ESP : %x)\n\n", current_task->stack_krn_esp) ;
-            }
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_SAVE(current_task->stack_usr_ebp) ;
+            POP_SAVE(current_task->eip) ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_SAVE(current_task->stack_usr_esp) ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
+            POP_TRASH ;
 
             // Save the registers.
             ITERATE_REGISTERS(SAVE_REGISTER) ;

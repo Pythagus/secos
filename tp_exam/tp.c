@@ -1,3 +1,10 @@
+/**
+ * Main OS entry point.
+ *
+ * @author Damien MOLINA
+ * @date 2022-01-02
+ */
+
 #include <debug.h>
 #include <secos/os.h>
 
@@ -8,6 +15,12 @@
 #define SHARED_ADDR_USR1 0x801000
 #define SHARED_ADDR_USR2 0x801000
 
+// Manage a mutex error.
+#define MUTEX_ERROR(__id__, __val__) ({ \
+    printf("\n\n\n\n======> [ERROR %d] : MUTEX = %d\n\n\n\n", __id__, __val__) ; \
+    while(1) ; \
+})
+
 /*
  * Structure used to easily store
  * the mutex and the counter value.
@@ -17,13 +30,27 @@ typedef struct t_counter {
     uint32_t value ;
 } t_counter ;
 
-void ATTR_SECTION(".user1") userland_1() {
-    printf("COUCOU 1\n") ;
+/**
+ * Call the system function to print the
+ * counter value.
+ *
+ * @param value
+ */
+void ATTR_SECTION(".sys_counter") sys_counter(const uint32_t * value) {
+    __asm__ volatile ("INT $0x80" :: "a"(value)) ;
+}
 
+/**
+ * Userland function used to increment
+ * the counter value.
+ *
+ * @return void
+ */
+void ATTR_SECTION(".user1") userland_1() {
     uint32_t mutex ;
     t_counter * counter = (t_counter *) SHARED_ADDR_USR1 ;
     counter->mutex = 0 ;
-    counter->value = 20 ;
+    counter->value = 10 ;
 
     while(1) {
         mutex = counter->mutex ;
@@ -32,15 +59,19 @@ void ATTR_SECTION(".user1") userland_1() {
             counter->value += 1 ;
             counter->mutex  = 1 ;
         } else if(mutex != 1) {
-            printf("\n\n\n\n======> [ERROR 1] : MUTEX (%x : %x) = %d\n\n\n\n\n", &counter, counter, mutex) ;
-            while(1) ;
+            MUTEX_ERROR(1, counter->mutex) ;
         }
     }
 }
 
+/**
+ * Userland function used to print
+ * the counter value thanks to a
+ * system call.
+ *
+ * @return void
+ */
 void ATTR_SECTION(".user2") userland_2() {
-    printf("COUCOU 2\n") ;
-
     uint32_t mutex ;
     t_counter * counter = (t_counter *) SHARED_ADDR_USR2 ;
 
@@ -48,15 +79,19 @@ void ATTR_SECTION(".user2") userland_2() {
         mutex = counter->mutex ;
 
         if(mutex == 1) {
-            __asm__ volatile ("INT $0x80" :: "a"(&counter->value)) ;
+            sys_counter(&counter->value) ;
             counter->mutex = 0 ;
         } else if(mutex != 0) {
-            printf("\n\n\n\n======> [ERROR 2] : MUTEX (%x : %x) = %d\n\n\n\n\n", &counter, counter, mutex) ;
-            while(1) ;
+            MUTEX_ERROR(2, counter->mutex) ;
         }
     }
 }
 
+/**
+ * Main OS loop.
+ *
+ * @return void
+ */
 void tp() {
     secos_initialize() ;
 
